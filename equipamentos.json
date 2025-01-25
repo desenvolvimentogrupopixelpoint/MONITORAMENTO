@@ -1,0 +1,26 @@
+[
+    {
+        "ip": "100.70.77.28",
+        "nome": "0063-amigao-caixa-2",
+        "endereco": "Bento Munhoz - Zona 7 - Maringa PR",
+        "status": "ATIVO"
+    },
+    {
+        "ip": "100.113.120.17",
+        "nome": "equipamento-teste-1",
+        "endereco": "Pixel Point",
+        "status": "ATIVO"
+    },
+    {
+        "ip": "100.127.114.57",
+        "nome": "equipamento-teste-2",
+        "endereco": "PixelPoint",
+        "status": "ATIVO"
+    },
+    {
+        "ip": "100.116.47.71",
+        "nome": "0063-amigao-caixa-1",
+        "endereco": "Bento Munhoz - Zona 10 - Maringa PR",
+        "status": "ATIVO"
+    }
+]

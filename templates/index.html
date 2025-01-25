@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        header button {
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+        }
+
+        .btn-green {
+            background-color: #28a745;
+        }
+
+        .btn-red {
+            background-color: #dc3545;
+        }
+
+        .container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .table-container {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #f8f9fa;
+        }
+
+        .status-active {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-inactive {
+            color: red;
+            font-weight: bold;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .modal-content button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+        }
+
+        .modal-content .btn-green {
+            background-color: #28a745;
+            margin-right: 10px;
+        }
+
+        .modal-content .btn-red {
+            background-color: #dc3545;
+        }
+    
+    </style>
+</head>
+<body>
+    <header>
+        <button class="btn-green" id="btn-novo">NOVO</button>
+        <h1>MONITORAMENTO</h1>
+        <button class="btn-red" id="btn-excluir">EXCLUIR</button>
+    </header>
+
+    <div class="container">
+    <div class="table-container">
+        <div class="table-header">PARADO</div>
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>NOME</th>
+                    <th>IP</th> <!-- Nova coluna para IP -->
+                    <th>ENDEREÇO</th>
+                    <th>ESTADO</th>
+                </tr>
+            </thead>
+            <tbody id="parado">
+                <!-- Linhas da tabela geradas dinamicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">RODANDO</div>
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>NOME</th>
+                    <th>IP</th> <!-- Nova coluna para IP -->
+                    <th>ENDEREÇO</th>
+                    <th>ESTADO</th>
+                </tr>
+            </thead>
+            <tbody id="rodando">
+                <!-- Linhas da tabela geradas dinamicamente -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+    <!-- Modal Novo -->
+    <div class="modal" id="modal-novo">
+        <div class="modal-content">
+            <h2>ADICIONAR NOVO EQUIPAMENTO</h2>
+            <label for="ip-tailscale">IP TAILSCALE</label>
+            <input type="text" id="ip-tailscale" placeholder="Digite o IP">
+
+            <label for="nome">NOME</label>
+            <input type="text" id="nome" placeholder="Digite o nome">
+
+            <label for="endereco">ENDEREÇO</label>
+            <input type="text" id="endereco" placeholder="Digite o endereço">
+
+            <button class="btn-green" id="btn-adicionar">ADICIONAR</button>
+            <button class="btn-red" id="btn-cancelar-novo">CANCELAR</button>
+        </div>
+    </div>
+
+    <!-- Modal Excluir -->
+    <div class="modal" id="modal-excluir">
+        <div class="modal-content">
+            <h2>Tem certeza que deseja excluir?</h2>
+            <button class="btn-green" id="btn-confirmar-excluir">SIM</button>
+            <button class="btn-red" id="btn-cancelar-excluir">CANCELAR</button>
+        </div>
+    </div>
+
+    <script>
+  // ------------------------------------------------
+  // Selecionar elementos do DOM (botões e containers)
+  // ------------------------------------------------
+  const btnNovo = document.getElementById('btn-novo');
+  const modalNovo = document.getElementById('modal-novo');
+  const btnCancelarNovo = document.getElementById('btn-cancelar-novo');
+  const btnAdicionar = document.getElementById('btn-adicionar');
+
+  const btnExcluir = document.getElementById('btn-excluir');
+  const modalExcluir = document.getElementById('modal-excluir');
+  const btnConfirmarExcluir = document.getElementById('btn-confirmar-excluir');
+  const btnCancelarExcluir = document.getElementById('btn-cancelar-excluir');
+
+  const tabelaParado = document.getElementById('parado');
+  const tabelaRodando = document.getElementById('rodando');
+
+  // ------------------------------------------------
+  // Abrir/fechar modais
+  // ------------------------------------------------
+  btnNovo.addEventListener('click', () => {
+    modalNovo.style.display = 'flex';
+  });
+  btnCancelarNovo.addEventListener('click', () => {
+    modalNovo.style.display = 'none';
+  });
+  window.addEventListener('click', (event) => {
+    if (event.target === modalNovo) {
+      modalNovo.style.display = 'none';
+    }
+    if (event.target === modalExcluir) {
+      modalExcluir.style.display = 'none';
+    }
+  });
+
+  // ------------------------------------------------
+  // 1) POST (ADICIONAR) – envia novo equipamento ao servidor
+  // ------------------------------------------------
+  btnAdicionar.addEventListener('click', () => {
+    const ip = document.getElementById('ip-tailscale').value.trim();
+    const nome = document.getElementById('nome').value.trim();
+    const endereco = document.getElementById('endereco').value.trim();
+
+    if (!ip || !nome || !endereco) {
+      alert('Preencha todos os campos!');
+      return;
+    }
+
+    fetch('/api/equipamentos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip, nome, endereco })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Resposta ao adicionar:', data);
+      if (!data.erro) {
+        // Sucesso – limpa campos, fecha modal e recarrega a lista
+        document.getElementById('ip-tailscale').value = '';
+        document.getElementById('nome').value = '';
+        document.getElementById('endereco').value = '';
+        modalNovo.style.display = 'none';
+        atualizarTabelas(); // Recarrega tabela para mostrar novo item
+      } else {
+        alert(data.erro);
+      }
+    })
+    .catch(error => console.error('Erro ao adicionar equipamento:', error));
+  });
+
+  // ------------------------------------------------
+  // 2) DELETE (EXCLUIR) – apaga equipamentos selecionados
+  // ------------------------------------------------
+  btnExcluir.addEventListener('click', () => {
+    // Vamos buscar checkboxes marcadas tanto em 'parado' quanto em 'rodando'
+    const checkParado = document.querySelectorAll('#parado input[type="checkbox"]:checked');
+    const checkRodando = document.querySelectorAll('#rodando input[type="checkbox"]:checked');
+
+    const selecionados = [...checkParado, ...checkRodando];
+
+    if (selecionados.length === 0) {
+      alert('Selecione pelo menos um equipamento para excluir!');
+      return;
+    }
+
+    // Abre modal de confirmação
+    modalExcluir.style.display = 'flex';
+  });
+
+  btnCancelarExcluir.addEventListener('click', () => {
+    modalExcluir.style.display = 'none';
+  });
+
+  btnConfirmarExcluir.addEventListener('click', () => {
+    const checkParado = document.querySelectorAll('#parado input[type="checkbox"]:checked');
+    const checkRodando = document.querySelectorAll('#rodando input[type="checkbox"]:checked');
+    const selecionados = [...checkParado, ...checkRodando];
+
+    const ipsParaExcluir = selecionados.map(chk => {
+        const row = chk.closest('tr');
+        return row ? row.getAttribute('data-ip') : '';
+    });
+
+    fetch('/api/equipamentos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ips: ipsParaExcluir })
+    })
+    .then(response => response.json())
+    .then(data => {
+        modalExcluir.style.display = 'none';
+        atualizarTabelas();
+    })
+    .catch(error => console.error('Erro ao excluir equipamentos:', error));
+});
+
+
+  // ------------------------------------------------
+  // 3) GET (Listar) – carrega lista de equipamentos do servidor
+  //    e atualiza as tabelas dinamicamente a cada 5 seg
+  // ------------------------------------------------
+  function atualizarTabelas() {
+    fetch('/api/equipamentos')
+        .then(response => response.json())
+        .then(equipamentos => {
+            // Ordena os equipamentos antes de atualizar as tabelas
+            const equipamentosOrdenados = ordenarEquipamentosPorNome(equipamentos);
+
+            tabelaParado.innerHTML = '';
+            tabelaRodando.innerHTML = '';
+
+            equipamentosOrdenados.forEach(equip => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-ip', equip.ip);
+                const statusClass = equip.status === 'ATIVO' ? 'status-active' : 'status-inactive';
+
+                row.innerHTML = `
+                    <td><input type="checkbox"></td>
+                    <td>${equip.nome}</td>
+                    <td>${equip.ip}</td>
+                    <td>${equip.endereco}</td>
+                    <td class="${statusClass}">${equip.status}</td>
+                `;
+
+                if (equip.status === 'ATIVO') {
+                    tabelaRodando.appendChild(row);
+                } else {
+                    tabelaParado.appendChild(row);
+                }
+            });
+        })
+        .catch(error => console.error('Erro ao obter equipamentos:', error));
+}
+
+
+
+  // Atualiza as tabelas automaticamente a cada 5s
+  setInterval(atualizarTabelas, 15000);
+  // Também puxa a lista de equipamentos ao carregar a página
+  atualizarTabelas();
+
+
+
+function ordenarEquipamentosPorNome(equipamentos) {
+    return equipamentos.sort((a, b) => {
+        const nomeA = a.nome.toLowerCase(); // Converte para minúsculas
+        const nomeB = b.nome.toLowerCase(); // Converte para minúsculas
+
+        // Use uma lógica "natural" para considerar números na ordenação
+        return nomeA.localeCompare(nomeB, undefined, { numeric: true, sensitivity: 'base' });
+    });
+}
+
+
+
+
+
+
+// Atualizar tabelas com ordenação
+function atualizarTabelas() {
+    fetch('/api/equipamentos')
+        .then(response => response.json())
+        .then(equipamentos => {
+            // Ordenar equipamentos corretamente
+            const equipamentosOrdenados = ordenarEquipamentosPorNome(equipamentos);
+
+            // Limpar tabelas
+            tabelaParado.innerHTML = '';
+            tabelaRodando.innerHTML = '';
+
+            // Preencher tabelas
+            equipamentosOrdenados.forEach(equip => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-ip', equip.ip);
+                const statusClass = equip.status === 'ATIVO' ? 'status-active' : 'status-inactive';
+
+                row.innerHTML = `
+                    <td><input type="checkbox"></td>
+                    <td>${equip.nome}</td>
+                    <td>${equip.ip}</td>
+                    <td>${equip.endereco}</td>
+                    <td class="${statusClass}">${equip.status}</td>
+                `;
+
+                if (equip.status === 'ATIVO') {
+                    tabelaRodando.appendChild(row);
+                } else {
+                    tabelaParado.appendChild(row);
+                }
+            });
+        })
+        .catch(error => console.error('Erro ao obter equipamentos:', error));
+}
+
+
+// Função para criar ou atualizar a tabela
+function atualizarTabela(tabela, equipamentos) {
+    const linhasExistentes = Array.from(tabela.querySelectorAll('tr'));
+    const ipsExistentes = linhasExistentes.map(linha => linha.getAttribute('data-ip'));
+
+    // Atualiza ou cria linhas
+    equipamentos.forEach(equip => {
+        let linha = linhasExistentes.find(l => l.getAttribute('data-ip') === equip.ip);
+
+        if (linha) {
+            // Atualiza linha existente
+            atualizarLinha(linha, equip);
+        } else {
+            // Cria uma nova linha
+            linha = criarLinha(equip);
+            tabela.appendChild(linha);
+        }
+    });
+
+    // Remove linhas obsoletas
+    linhasExistentes.forEach(linha => {
+        const ip = linha.getAttribute('data-ip');
+        if (!equipamentos.some(equip => equip.ip === ip)) {
+            linha.remove();
+        }
+    });
+}
+
+// Função para criar uma nova linha
+function criarLinha(equip) {
+    const linha = document.createElement('tr');
+    linha.setAttribute('data-ip', equip.ip);
+
+    const estadoClass = equip.status === 'ATIVO' ? 'status-active' : 'status-inactive';
+
+    linha.innerHTML = `
+        <td><input type="checkbox"></td>
+        <td>${equip.nome}</td>
+        <td>${equip.ip}</td>
+        <td>${equip.endereco}</td>
+        <td class="estado ${estadoClass}">${equip.status}</td>
+    `;
+
+    return linha;
+}
+
+// Função para atualizar uma linha existente
+function atualizarLinha(linha, equip) {
+    const estadoClass = equip.status === 'ATIVO' ? 'status-active' : 'status-inactive';
+
+    linha.querySelector('td:nth-child(2)').textContent = equip.nome;
+    linha.querySelector('td:nth-child(3)').textContent = equip.ip;
+    linha.querySelector('td:nth-child(4)').textContent = equip.endereco;
+    linha.querySelector('td:nth-child(5)').textContent = equip.status;
+    linha.querySelector('td:nth-child(5)').className = `estado ${estadoClass}`;
+}
+
+// Atualiza as tabelas automaticamente a cada 2 segundos
+setInterval(atualizarTabelas, 2000);
+// Atualiza imediatamente ao carregar
+atualizarTabelas();
+
+
+
+
+
+</script>
+
+</body>
+</html>
