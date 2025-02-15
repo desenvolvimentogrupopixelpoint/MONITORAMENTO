@@ -348,8 +348,13 @@
     fetch('/api/equipamentos')
         .then(response => response.json())
         .then(equipamentos => {
-            // Ordena os equipamentos antes de atualizar as tabelas
             const equipamentosOrdenados = ordenarEquipamentosPorNome(equipamentos);
+
+            // Salva os IPs que estavam selecionados antes da atualização
+            const checkboxesSelecionados = new Set(
+                [...document.querySelectorAll('input[type="checkbox"]:checked')]
+                    .map(chk => chk.closest('tr').getAttribute('data-ip'))
+            );
 
             tabelaParado.innerHTML = '';
             tabelaRodando.innerHTML = '';
@@ -367,6 +372,12 @@
                     <td class="${statusClass}">${equip.status}</td>
                 `;
 
+                // Restaurar a seleção, se o IP estava marcado antes da atualização
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                if (checkboxesSelecionados.has(equip.ip)) {
+                    checkbox.checked = true;
+                }
+
                 if (equip.status === 'ATIVO') {
                     tabelaRodando.appendChild(row);
                 } else {
@@ -376,6 +387,7 @@
         })
         .catch(error => console.error('Erro ao obter equipamentos:', error));
 }
+
 
 
 
@@ -401,70 +413,81 @@ function ordenarEquipamentosPorNome(equipamentos) {
 
 
 
-// Atualizar tabelas com ordenação
 function atualizarTabelas() {
     fetch('/api/equipamentos')
         .then(response => response.json())
         .then(equipamentos => {
-            // Ordenar equipamentos corretamente
             const equipamentosOrdenados = ordenarEquipamentosPorNome(equipamentos);
 
-            // Limpar tabelas
-            tabelaParado.innerHTML = '';
-            tabelaRodando.innerHTML = '';
+            // Guardar checkboxes marcados antes da atualização
+            const checkboxesSelecionados = new Map();
+            document.querySelectorAll('tr[data-ip]').forEach(row => {
+                const ip = row.getAttribute('data-ip');
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                if (checkbox && checkbox.checked) {
+                    checkboxesSelecionados.set(ip, true);
+                }
+            });
 
-            // Preencher tabelas
+            const atualizarOuCriarLinha = (tabela, equip) => {
+                let row = tabela.querySelector(`tr[data-ip="${equip.ip}"]`);
+                if (!row) {
+                    // Criar uma nova linha apenas se não existir
+                    row = document.createElement('tr');
+                    row.setAttribute('data-ip', equip.ip);
+                    row.innerHTML = `
+                        <td><input type="checkbox"></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="estado"></td>
+                    `;
+                    tabela.appendChild(row);
+                }
+
+                // Atualizar apenas os valores da linha existente
+                row.querySelector('td:nth-child(2)').textContent = equip.nome;
+                row.querySelector('td:nth-child(3)').textContent = equip.ip;
+                row.querySelector('td:nth-child(4)').textContent = equip.endereco;
+                
+                const statusCell = row.querySelector('td:nth-child(5)');
+                statusCell.textContent = equip.status;
+                statusCell.className = equip.status === 'ATIVO' ? 'estado status-active' : 'estado status-inactive';
+
+                // Restaurar a seleção do checkbox
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                checkbox.checked = checkboxesSelecionados.get(equip.ip) || false;
+            };
+
+            // Não apagar toda a tabela, apenas atualizar linhas existentes
             equipamentosOrdenados.forEach(equip => {
-                const row = document.createElement('tr');
-                row.setAttribute('data-ip', equip.ip);
-                const statusClass = equip.status === 'ATIVO' ? 'status-active' : 'status-inactive';
-
-                row.innerHTML = `
-                    <td><input type="checkbox"></td>
-                    <td>${equip.nome}</td>
-                    <td>${equip.ip}</td>
-                    <td>${equip.endereco}</td>
-                    <td class="${statusClass}">${equip.status}</td>
-                `;
-
                 if (equip.status === 'ATIVO') {
-                    tabelaRodando.appendChild(row);
+                    atualizarOuCriarLinha(tabelaRodando, equip);
                 } else {
-                    tabelaParado.appendChild(row);
+                    atualizarOuCriarLinha(tabelaParado, equip);
+                }
+            });
+
+            // Remover linhas que não existem mais na lista
+            document.querySelectorAll('tr[data-ip]').forEach(row => {
+                const ip = row.getAttribute('data-ip');
+                if (!equipamentosOrdenados.some(equip => equip.ip === ip)) {
+                    row.remove();
                 }
             });
         })
         .catch(error => console.error('Erro ao obter equipamentos:', error));
 }
 
-
-// Função para criar ou atualizar a tabela
-function atualizarTabela(tabela, equipamentos) {
-    const linhasExistentes = Array.from(tabela.querySelectorAll('tr'));
-    const ipsExistentes = linhasExistentes.map(linha => linha.getAttribute('data-ip'));
-
-    // Atualiza ou cria linhas
-    equipamentos.forEach(equip => {
-        let linha = linhasExistentes.find(l => l.getAttribute('data-ip') === equip.ip);
-
-        if (linha) {
-            // Atualiza linha existente
-            atualizarLinha(linha, equip);
-        } else {
-            // Cria uma nova linha
-            linha = criarLinha(equip);
-            tabela.appendChild(linha);
-        }
-    });
-
-    // Remove linhas obsoletas
-    linhasExistentes.forEach(linha => {
-        const ip = linha.getAttribute('data-ip');
-        if (!equipamentos.some(equip => equip.ip === ip)) {
-            linha.remove();
-        }
-    });
+// 🔥 Removendo chamadas duplicadas de setInterval e deixando apenas uma
+if (!window.atualizacaoIniciada) {
+    window.atualizacaoIniciada = true;
+    setInterval(atualizarTabelas, 2000);
 }
+
+// 🚀 Atualiza a tabela imediatamente ao carregar
+atualizarTabelas();
+
 
 // Função para criar uma nova linha
 function criarLinha(equip) {
@@ -494,11 +517,6 @@ function atualizarLinha(linha, equip) {
     linha.querySelector('td:nth-child(5)').textContent = equip.status;
     linha.querySelector('td:nth-child(5)').className = `estado ${estadoClass}`;
 }
-
-// Atualiza as tabelas automaticamente a cada 2 segundos
-setInterval(atualizarTabelas, 2000);
-// Atualiza imediatamente ao carregar
-atualizarTabelas();
 
 
 
