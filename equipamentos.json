@@ -1,1 +1,32 @@
-[]
+[
+    {
+        "ip": "100.69.44.30",
+        "nome": "0063-amigao-01",
+        "endereco": "Bentro Munhoz - Zona 10 - Maringa PR",
+        "status": "ATIVO"
+    },
+    {
+        "ip": "100.112.146.69",
+        "nome": "0063-amigao-02",
+        "endereco": "Bentro Munhoz - Zona 10 - Maringa PR",
+        "status": "ATIVO"
+    },
+    {
+        "ip": "100.122.12.72",
+        "nome": "0063-amigao-03",
+        "endereco": "Bentro Munhoz - Zona 10 - Maringa PR",
+        "status": "ATIVO"
+    },
+    {
+        "ip": "100.107.179.50",
+        "nome": "0063-amigao-04",
+        "endereco": "Bentro Munhoz - Zona 10 - Maringa PR",
+        "status": "ATIVO"
+    },
+    {
+        "ip": "100.127.150.12",
+        "nome": "0063-amigao-05",
+        "endereco": "Bentro Munhoz - Zona 10 - Maringa PR",
+        "status": "ATIVO"
+    }
+]

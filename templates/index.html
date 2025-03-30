@@ -147,7 +147,7 @@
         .modal-content .btn-red {
             background-color: #dc3545;
         }
-    
+
     </style>
 </head>
 <body>
@@ -413,71 +413,7 @@ function ordenarEquipamentosPorNome(equipamentos) {
 
 
 
-function atualizarTabelas() {
-    fetch('/api/equipamentos')
-        .then(response => response.json())
-        .then(equipamentos => {
-            const equipamentosOrdenados = ordenarEquipamentosPorNome(equipamentos);
 
-            // Guardar checkboxes marcados antes da atualização
-            const checkboxesSelecionados = new Map();
-            document.querySelectorAll('tr[data-ip]').forEach(row => {
-                const ip = row.getAttribute('data-ip');
-                const checkbox = row.querySelector('input[type="checkbox"]');
-                if (checkbox && checkbox.checked) {
-                    checkboxesSelecionados.set(ip, true);
-                }
-            });
-
-            const atualizarOuCriarLinha = (tabela, equip) => {
-                let row = tabela.querySelector(`tr[data-ip="${equip.ip}"]`);
-                if (!row) {
-                    // Criar uma nova linha apenas se não existir
-                    row = document.createElement('tr');
-                    row.setAttribute('data-ip', equip.ip);
-                    row.innerHTML = `
-                        <td><input type="checkbox"></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td class="estado"></td>
-                    `;
-                    tabela.appendChild(row);
-                }
-
-                // Atualizar apenas os valores da linha existente
-                row.querySelector('td:nth-child(2)').textContent = equip.nome;
-                row.querySelector('td:nth-child(3)').textContent = equip.ip;
-                row.querySelector('td:nth-child(4)').textContent = equip.endereco;
-                
-                const statusCell = row.querySelector('td:nth-child(5)');
-                statusCell.textContent = equip.status;
-                statusCell.className = equip.status === 'ATIVO' ? 'estado status-active' : 'estado status-inactive';
-
-                // Restaurar a seleção do checkbox
-                const checkbox = row.querySelector('input[type="checkbox"]');
-                checkbox.checked = checkboxesSelecionados.get(equip.ip) || false;
-            };
-
-            // Não apagar toda a tabela, apenas atualizar linhas existentes
-            equipamentosOrdenados.forEach(equip => {
-                if (equip.status === 'ATIVO') {
-                    atualizarOuCriarLinha(tabelaRodando, equip);
-                } else {
-                    atualizarOuCriarLinha(tabelaParado, equip);
-                }
-            });
-
-            // Remover linhas que não existem mais na lista
-            document.querySelectorAll('tr[data-ip]').forEach(row => {
-                const ip = row.getAttribute('data-ip');
-                if (!equipamentosOrdenados.some(equip => equip.ip === ip)) {
-                    row.remove();
-                }
-            });
-        })
-        .catch(error => console.error('Erro ao obter equipamentos:', error));
-}
 
 // 🔥 Removendo chamadas duplicadas de setInterval e deixando apenas uma
 if (!window.atualizacaoIniciada) {

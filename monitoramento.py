@@ -123,5 +123,5 @@ if __name__ == '__main__':
 
     threading.Thread(target=abrir_navegador, daemon=True).start()
 
-    # Executa o Flask na porta 5500
-    app.run(host='0.0.0.0', port=5555, debug=False)
+    # Executa o Flask na porta 5555
+    app.run(host='0.0.0.0', port=5555, debug=True)
